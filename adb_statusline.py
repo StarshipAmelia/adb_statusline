@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
-"""adb_statusline.py is a reasonably simple script that will print a number of
-statistics about the connected android phone, via adb. These are customizable.
-Further information will be added later..."""
+"""
+adb_statusline.py is a reasonably simple script that will print various pieces
+of information about a connected android phone via adb.
+
+Load average, memory usage, and/or battery percentage can be printed. They will
+be formatted either for "standard" usage in a shell, or "tmux" usage in tmux.
+
+Color is mandatory at this point.
+"""
 
 # For parsing arguments
 import argparse
@@ -9,6 +15,8 @@ import argparse
 import sys
 # For exit codes
 import errno
+# For running adb and other commands
+import subprocess
 
 # Authorship information
 __author__ = "Ameliai"
@@ -33,6 +41,28 @@ __status__ = "Prototype"
 #
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+# Function Definitions
+
+def check_adb():
+    """
+    Checks for the existance of ADB, raises an exception if it's not available.
+
+    This exception should usually be allowed to exit the program.
+    """
+    try:
+        subprocess.run(['which', 'adb'],
+                       stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL).check_returncode()
+
+    except subprocess.CalledProcessError as e:
+        print('adb not found!!', file=sys.stderr)
+        raise FileNotFoundError from e
+
+# Check for ADB first, no point in running more code if it's missing!
+check_adb()
+
 
 short_description = """A statusline to display android phone info for shell and
 tmux via adb"""
@@ -75,3 +105,9 @@ print(args)
 if args.tmux_needed == True and not args.flags:
     print('-t or --tmux must be used with other flags!!', file=sys.stderr)
     sys.exit(errno.EPERM)
+
+
+# Main program loop
+for flag in args.flags:
+    print(flag)
+
