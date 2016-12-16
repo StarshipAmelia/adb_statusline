@@ -3,7 +3,12 @@
 statistics about the connected android phone, via adb. These are customizable.
 Further information will be added later..."""
 
-# Imports go here
+# For parsing arguments
+import argparse
+# For stderr and exit
+import sys
+# For exit codes
+import errno
 
 # Authorship information
 __author__ = "Ameliai"
@@ -28,3 +33,45 @@ __status__ = "Prototype"
 #
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+short_description = """A statusline to display android phone info for shell and
+tmux via adb"""
+
+# Set up parser and arguments
+parser = argparse.ArgumentParser(description=short_description)
+
+parser.add_argument('-t', '--tmux',
+                    action='store_true',
+                    dest='tmux_needed',
+                    help='Use tmux-style colors'
+                    )
+
+parser.add_argument('-l', '--load',
+                    action='append_const',
+                    dest='flags',
+                    const='load',
+                    help='Display load average'
+                    )
+
+parser.add_argument('-m', '--memory',
+                    action='append_const',
+                    dest='flags',
+                    const='mem',
+                    help='Display memory useage, human readable'
+                    )
+
+parser.add_argument('-b', '--battery',
+                    action='append_const',
+                    dest='flags',
+                    const='bat',
+                    help='Display battery percentage'
+                    )
+
+args = parser.parse_args()
+print(args)
+
+# The tmux flag can only be used with other flags, or there'd be nothing to
+# print!
+if args.tmux_needed == True and not args.flags:
+    print('-t or --tmux must be used with other flags!!', file=sys.stderr)
+    sys.exit(errno.EPERM)
