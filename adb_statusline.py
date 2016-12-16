@@ -17,6 +17,8 @@ import sys
 import errno
 # For running adb and other commands
 import subprocess
+# For easier color
+from colored import fore, back, style
 
 # Authorship information
 __author__ = "Ameliai"
@@ -60,6 +62,70 @@ def check_adb():
         print('adb not found!!', file=sys.stderr)
         raise FileNotFoundError from e
 
+def colorize(percent):
+    """
+    Takes the value of percent and uses it to determine what color the percent
+    should be.
+
+    The coloriized text is returned
+
+    Uses the colored module if tmux_needed is not True
+    """
+    # Initalize
+    return_string = ""
+
+    # Check for the different levels
+    if percent == 100:
+        # Satisfied
+        return_string = (fore.CYAN_1
+        + str(percent)
+        + style.RESET)
+
+    elif percent >= 80:
+        #Mostly satisfied
+        return_string = (fore.GREEN_1
+        + style.BOLD
+        + str(percent)
+        + style.RESET)
+
+    elif percent >= 60:
+        # Fairly satisfied
+        return_string = (fore.GREEN
+        + str(percent)
+        + style.RESET)
+
+    elif percent >= 45:
+        # Begin to worry
+        return_string = (fore.YELLOW_1
+        + style.BOLD
+        + str(percent)
+        + style.RESET)
+
+    elif percent >= 30:
+        # Worry
+        return_string = (fore.YELLOW
+        + style.BOLD
+        + str(percent)
+        + style.RESET)
+
+    elif percent >= 15:
+        # Worry more
+        return_string = (fore.RED
+        + str(percent)
+        + style.RESET)
+
+    else:
+        # Worry a lot
+        return_string = (fore.RED_1
+        + style.BOLD
+        + str(percent)
+        + style.RESET)
+
+    return return_string
+
+
+
+
 # Check for ADB first, no point in running more code if it's missing!
 check_adb()
 
@@ -74,28 +140,28 @@ parser.add_argument('-t', '--tmux',
                     action='store_true',
                     dest='tmux_needed',
                     help='Use tmux-style colors'
-                    )
+                   )
 
 parser.add_argument('-l', '--load',
                     action='append_const',
                     dest='flags',
                     const='load',
                     help='Display load average'
-                    )
+                   )
 
 parser.add_argument('-m', '--memory',
                     action='append_const',
                     dest='flags',
                     const='mem',
                     help='Display memory useage, human readable'
-                    )
+                   )
 
 parser.add_argument('-b', '--battery',
                     action='append_const',
                     dest='flags',
                     const='bat',
                     help='Display battery percentage'
-                    )
+                   )
 
 args = parser.parse_args()
 print(args)
@@ -110,4 +176,7 @@ if args.tmux_needed == True and not args.flags:
 # Main program loop
 for flag in args.flags:
     print(flag)
+
+    for num in range(100, 0, -1):
+        print(colorize(num))
 
