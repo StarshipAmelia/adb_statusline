@@ -17,6 +17,9 @@ import sys
 import errno
 # For running adb and other commands
 import subprocess
+# For regexes
+import re
+
 # For easier color
 from colored import fore, back, style
 
@@ -45,7 +48,7 @@ __status__ = "Prototype"
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-# Function Definitions
+# Function Definitions START
 
 def check_adb():
     """
@@ -63,10 +66,15 @@ def check_adb():
         raise FileNotFoundError from e
 
 
-def colorize(percent, tmux_needed):
+def colorize(num, maximum, tmux_needed):
     """
-    Takes the value of percent and uses it to determine what color the percent
+    Takes the value of num and uses it to determine what color the num
     should be.
+
+    num             - The number that will be colorized
+    maximum         - The 'maximum' value, used to create percentages
+                      Make this negative if bigger num == worse
+    tmux_needed     - Are tmux-style colors needed?
 
     The colorized text is returned
 
@@ -175,50 +183,105 @@ def colorize(percent, tmux_needed):
                         "#[none fg=default]")   # Reset text
     else:
         # Use ANSI 256 color
-        colors = Colors(fore.CYAN_1,
-                        fore.GREEN_1,
-                        fore.GREEN_4,
-                        fore.YELLOW_1,
-                        fore.YELLOW,
-                        fore.RED,
-                        fore.RED_1,
-                        style.BOLD,
-                        style.RESET)
+        colors = Colors(fore.CYAN_1,            # Cyan
+                        fore.GREEN_1,           # Bright Green
+                        fore.GREEN_4,           # Dark Green
+                        fore.YELLOW_1,          # Yellow
+                        fore.YELLOW,            # Orange
+                        fore.RED,               # Dark Red
+                        fore.RED_1,             # Bright Red
+                        style.BOLD,             # Bold Text
+                        style.RESET)            # Reset text
 
     # Initalize
     return_string = ""
 
+    # Find the percentage
+    if maximum < 0:
+        # If maximum is negative, a bigger num needs more hazardous colors...
+        percent = ((float(num)/maximum) + 1) * 100
+    else:
+        percent = (float(num)/maximum) * 100
+
     # Check for the different levels
-    if percent == 100:
+    if percent >= 100:  # >= just in case we get an absurdly high load average
         # Satisfied
-        return_string = colors.format_satisfied(str(percent))
+        return_string = colors.format_satisfied(str(num))
 
     elif percent >= 80:
         # Mostly satisfied
-        return_string = colors.format_high_high(str(percent))
+        return_string = colors.format_high_high(str(num))
 
     elif percent >= 60:
         # Fairly satisfied
-        return_string = colors.format_high_low(str(percent))
+        return_string = colors.format_high_low(str(num))
 
     elif percent >= 45:
         # Begin to worry
-        return_string = colors.format_medium_high(str(percent))
+        return_string = colors.format_medium_high(str(num))
 
     elif percent >= 30:
         # Worry
-        return_string = colors.format_medium_low(str(percent))
+        return_string = colors.format_medium_low(str(num))
 
     elif percent >= 15:
         # Worry more
-        return_string = colors.format_low_high(str(percent))
+        return_string = colors.format_low_high(str(num))
 
     else:
         # Worry a lot
-        return_string = colors.format_low_low(str(percent))
+        return_string = colors.format_low_low(str(num))
 
     return return_string
 
+# TODO: Rewrite to deal with new colorize
+def get_load(device):
+    """
+    Gets the load average of the android device represented by the string
+    device (not implemented currently, assumes only 1 device is plugged in)
+
+    Returns the load average in the format 'n.nn n.nn n.nn'
+    """
+    # Grab the output of `adb shell cat /proc/loadavg` only
+    dirty_load = subprocess.run(['adb', 'shell', 'cat /proc/loadavg'],
+                                stdout=subprocess.PIPE).stdout
+
+    # Convert dirty_load to a python string and remove the trailing \n
+    clean_load = dirty_load.decode('utf-8')[:-1]
+
+    # Get the load averages by themselves
+    just_load = re.search('^.*\d\.\d\d', clean_load).group()
+
+    # Put each load into a list
+    loads_list = just_load.split(' ')
+
+    # Get number of cpu cores
+    num_cores = subprocess.run(['adb', 'shell',
+                               'cat /sys/devices/system/cpu/present'],
+                               stdout=subprocess.PIPE).stdout
+
+    # Get just the last number
+    num_cores = num_cores.decode('utf-8')[-2:-1]
+
+    # Increment the number, it's zero-indexed
+    num_cores = int(num_cores) + 1
+
+    # Double num_cores for "medium" usage when 100% taxed
+    num_cores = num_cores * 2
+
+    # Initalize
+    loads_string = ''
+
+    # TODO: Colorize
+    for load in loads_list:
+        # This number gets more hazardous as it goes up, so num_cores should be
+        # negative
+        loads_string += colorize(load, (num_cores * -1), args.tmux_needed)
+        loads_string += ' '
+
+    return loads_string
+
+# Function Definitions END
 
 # Check for ADB first, no point in running more code if it's missing!
 check_adb()
@@ -273,5 +336,4 @@ if not args.flags:
 for flag in args.flags:
     print(flag)
 
-    for num in range(100, 0, -1):
-        print(colorize(num, args.tmux_needed))
+print(get_load('foo'))
