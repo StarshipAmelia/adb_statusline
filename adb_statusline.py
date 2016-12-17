@@ -290,6 +290,44 @@ def get_load(device):
 
     return loads_string
 
+
+def get_memory(device):
+    """
+    Gets the memory usage of the android device represented by the string
+    device (not implemented currently, assumes only 1 device is plugged in)
+
+    Returns the memory in the format USED/TOTAL, in MB
+    """
+
+    # Grab all of the phone's /proc/meminfo
+    dirty_meminfo = subprocess.run(['adb', 'shell', 'cat /proc/meminfo'],
+                                   stdout=subprocess.PIPE,
+                                   universal_newlines=True).stdout
+
+    # Remove extraneous fields
+    cleaner_meminfo = re.sub(r'Buffers:.*', '',
+                             dirty_meminfo.replace('\n', ' '))
+
+    # Remove non-numbers
+    meminfo_list = re.sub(r'[^\d ]', '', cleaner_meminfo).split()
+
+    # Get memory utilized, [0] is full, [1] is free
+    mem_used = int(meminfo_list[0]) - int(meminfo_list[1])
+
+    # /proc/meminfo gives KB, convert to MB
+    mem_used = mem_used // 1000
+    meminfo_list[0] = int(meminfo_list[0]) // 1000
+    # No need to convert meminfo_list[1], it's not used again...
+
+    # Colorize used memory
+    return_string = colorize(mem_used, (meminfo_list[0] * -1), args.tmux_needed)
+
+    # TODO Colorize total mem?
+    return_string = return_string + '/' + str(meminfo_list[0])
+
+    return return_string
+
+
 # Function Definitions END
 
 
@@ -347,3 +385,4 @@ for flag in args.flags:
     print(flag)
 
 print(get_load('foo'))
+print(get_memory('foo'))
