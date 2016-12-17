@@ -55,6 +55,8 @@ def check_adb():
     Checks for the existance of ADB, raises an exception if it's not available.
 
     This exception should usually be allowed to exit the program.
+
+    If adb is available, makes sure that there's a device plugged in
     """
     try:
         subprocess.run(['which', 'adb'],
@@ -64,6 +66,14 @@ def check_adb():
     except subprocess.CalledProcessError as e:
         print('adb not found!!', file=sys.stderr)
         raise FileNotFoundError from e
+
+    # Grab output for `adb devices`
+    device_exist = subprocess.run(['adb', 'devices'],
+                                  stdout=subprocess.PIPE).stdout
+
+    if not re.search(r'\bdevice\b', device_exist.decode('utf-8')):
+        print('No device detected!!', file=sys.stderr)
+        sys.exit(errno.ENXIO)
 
 
 def colorize(num, maximum, tmux_needed):
@@ -234,7 +244,7 @@ def colorize(num, maximum, tmux_needed):
 
     return return_string
 
-# TODO: Rewrite to deal with new colorize
+
 def get_load(device):
     """
     Gets the load average of the android device represented by the string
@@ -272,7 +282,6 @@ def get_load(device):
     # Initalize
     loads_string = ''
 
-    # TODO: Colorize
     for load in loads_list:
         # This number gets more hazardous as it goes up, so num_cores should be
         # negative
@@ -282,6 +291,7 @@ def get_load(device):
     return loads_string
 
 # Function Definitions END
+
 
 # Check for ADB first, no point in running more code if it's missing!
 check_adb()
