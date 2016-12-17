@@ -63,7 +63,7 @@ def check_adb():
         raise FileNotFoundError from e
 
 
-def colorize(percent):
+def colorize(percent, tmux_needed):
     """
     Takes the value of percent and uses it to determine what color the percent
     should be.
@@ -72,58 +72,150 @@ def colorize(percent):
 
     Uses the colored module if tmux_needed is not True
     """
+
+    class Colors:
+        """
+        Contains data members to store the choice of colors in, as well as
+        functions to format according to the various levels
+        """
+        def __init__(self,
+                     satisfied,
+                     high_high,
+                     high_low,
+                     medium_high,
+                     medium_low,
+                     low_high,
+                     low_low,
+                     bold,
+                     reset):
+
+            self.satisfied = satisfied
+            self.high_high = high_high
+            self.high_low = high_low
+            self.medium_high = medium_high
+            self.medium_low = medium_low
+            self.low_high = low_high
+            self.low_low = low_low
+            self.bold = bold
+            self.reset = reset
+
+        def format_satisfied(self, string):
+            """
+            returns the formatted string, according to the colors passed in the
+            object initialization.
+
+            satisfied colors
+            """
+            return (self.satisfied + self.bold + string + self.reset)
+
+        def format_high_high(self, string):
+            """
+            returns the formatted string, according to the colors passed in the
+            object initialization.
+
+            high_high colors
+            """
+            return (self.high_high + self.bold + string + self.reset)
+
+        def format_high_low(self, string):
+            """
+            returns the formatted string, according to the colors passed in the
+            object initialization.
+
+            high_low colors
+            """
+            return (self.high_low + self.bold + string + self.reset)
+
+        def format_medium_high(self, string):
+            """
+            returns the formatted string, according to the colors passed in the
+            object initialization.
+
+            medium_high colors
+            """
+            return (self.medium_high + self.bold + string + self.reset)
+
+        def format_medium_low(self, string):
+            """
+            returns the formatted string, according to the colors passed in the
+            object initialization.
+
+            medium_low colors
+            """
+            return (self.medium_low + self.bold + string + self.reset)
+
+        def format_low_high(self, string):
+            """
+            returns the formatted string, according to the colors passed in the
+            object initialization.
+
+            low_high colors
+            """
+            return (self.low_high + self.bold + string + self.reset)
+
+        def format_low_low(self, string):
+            """
+            returns the formatted string, according to the colors passed in the
+            object initialization.
+
+            low_low colors
+            """
+            return (self.low_low + self.bold + string + self.reset)
+
+    if tmux_needed:
+        # Use tmux-style colors
+        colors = Colors("#[fg=colour51]",       # Cyan
+                        "#[fg=colour46]",       # Bright Green
+                        "#[fg=colour28]",       # Dark Green
+                        "#[fg=colour226]",      # Yellow
+                        "#[fg=colour3]",        # Orange
+                        "#[fg=colour1]",        # Dark Red
+                        "#[fg=colour196]",      # Bright Red
+                        "#[bold]",              # Bold Text
+                        "#[none fg=default]")   # Reset text
+    else:
+        # Use ANSI 256 color
+        colors = Colors(fore.CYAN_1,
+                        fore.GREEN_1,
+                        fore.GREEN_4,
+                        fore.YELLOW_1,
+                        fore.YELLOW,
+                        fore.RED,
+                        fore.RED_1,
+                        style.BOLD,
+                        style.RESET)
+
     # Initalize
     return_string = ""
 
     # Check for the different levels
     if percent == 100:
         # Satisfied
-        return_string = (fore.CYAN_1
-                         + style.BOLD
-                         + str(percent)
-                         + style.RESET)
+        return_string = colors.format_satisfied(str(percent))
 
     elif percent >= 80:
         # Mostly satisfied
-        return_string = (fore.GREEN_1
-                         + style.BOLD
-                         + str(percent)
-                         + style.RESET)
+        return_string = colors.format_high_high(str(percent))
 
     elif percent >= 60:
         # Fairly satisfied
-        return_string = (fore.GREEN_4
-                         + style.BOLD
-                         + str(percent)
-                         + style.RESET)
+        return_string = colors.format_high_low(str(percent))
 
     elif percent >= 45:
         # Begin to worry
-        return_string = (fore.YELLOW_1
-                         + style.BOLD
-                         + str(percent)
-                         + style.RESET)
+        return_string = colors.format_medium_high(str(percent))
 
     elif percent >= 30:
         # Worry
-        return_string = (fore.YELLOW
-                         + style.BOLD
-                         + str(percent)
-                         + style.RESET)
+        return_string = colors.format_medium_low(str(percent))
 
     elif percent >= 15:
         # Worry more
-        return_string = (fore.RED
-                         + style.BOLD
-                         + str(percent)
-                         + style.RESET)
+        return_string = colors.format_low_high(str(percent))
 
     else:
         # Worry a lot
-        return_string = (fore.RED_1
-                         + style.BOLD
-                         + str(percent)
-                         + style.RESET)
+        return_string = colors.format_low_low(str(percent))
 
     return return_string
 
@@ -148,21 +240,21 @@ parser.add_argument('-l', '--load',
                     action='append_const',
                     dest='flags',
                     const='load',
-                    help='Display load average'
+                    help='Display load average (action)'
                     )
 
 parser.add_argument('-m', '--memory',
                     action='append_const',
                     dest='flags',
                     const='mem',
-                    help='Display memory useage, human readable'
+                    help='Display memory useage, human readable (action)'
                     )
 
 parser.add_argument('-b', '--battery',
                     action='append_const',
                     dest='flags',
                     const='bat',
-                    help='Display battery percentage'
+                    help='Display battery percentage (action)'
                     )
 
 args = parser.parse_args()
@@ -171,13 +263,15 @@ print(args)
 # The tmux flag can only be used with other flags, or there'd be nothing to
 # print!
 if args.tmux_needed and not args.flags:
-    print('-t or --tmux must be used with other flags!!', file=sys.stderr)
-    sys.exit(errno.EPERM)
+    parser.error('-t or --tmux must be used with other flags!!')
 
+# Similarly, at least one flag must be used...
+if not args.flags:
+    parser.error('Please specify an action, see -h')
 
 # Main program loop
 for flag in args.flags:
     print(flag)
 
     for num in range(100, 0, -1):
-        print(colorize(num))
+        print(colorize(num, args.tmux_needed))
