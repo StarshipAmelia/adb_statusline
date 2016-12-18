@@ -209,9 +209,9 @@ def colorize(num, maximum, tmux_needed):
     # Find the percentage
     if maximum < 0:
         # If maximum is negative, a bigger num needs more hazardous colors...
-        percent = ((float(num)/maximum) + 1) * 100
+        percent = ((float(num)/float(maximum)) + 1) * 100
     else:
-        percent = (float(num)/maximum) * 100
+        percent = (float(num)/float(maximum)) * 100
 
     # Check for the different levels
     if percent >= 100:  # >= just in case we get an absurdly high load average
@@ -288,7 +288,8 @@ def get_load(device):
         loads_string += colorize(load, (num_cores * -1), args.tmux_needed)
         loads_string += ' '
 
-    return loads_string
+    # Remove the last space while returning
+    return loads_string[:-1]
 
 
 def get_memory(device):
@@ -320,13 +321,38 @@ def get_memory(device):
     # No need to convert meminfo_list[1], it's not used again...
 
     # Colorize used memory
-    return_string = colorize(mem_used, (meminfo_list[0] * -1), args.tmux_needed)
+    return_string = colorize(mem_used,
+                             (meminfo_list[0] * -1),
+                             args.tmux_needed)
 
     # TODO Colorize total mem?
     return_string = return_string + '/' + str(meminfo_list[0])
 
     return return_string
 
+
+def get_battery(device):
+    """
+    Gets the battery level of the android device represented by the string
+    device (not implemented currently, assumes only 1 device is plugged in)
+
+    Returns the battery in the format PERCENT%
+    """
+
+    capacity_location = '/sys/class/power_supply/battery/capacity'
+
+    # Get the battery level from /sys/class/power_supply/battery/capacity
+    battery_level = subprocess.run(['adb', 'shell',
+                                   'cat', capacity_location],
+                                   stdout=subprocess.PIPE,
+                                   universal_newlines=True).stdout
+    # Remove newline
+    battery_level = battery_level.replace('\n', '')
+
+    # Return the value
+    return colorize(battery_level,
+                    100,
+                    args.tmux_needed) + '%'
 
 # Function Definitions END
 
@@ -369,7 +395,6 @@ parser.add_argument('-b', '--battery',
                     )
 
 args = parser.parse_args()
-print(args)
 
 # The tmux flag can only be used with other flags, or there'd be nothing to
 # print!
@@ -380,9 +405,8 @@ if args.tmux_needed and not args.flags:
 if not args.flags:
     parser.error('Please specify an action, see -h')
 
-# Main program loop
-for flag in args.flags:
-    print(flag)
+## Main program loop
+#for flag in args.flags:
+#    print(flag)
 
-print(get_load('foo'))
-print(get_memory('foo'))
+print(get_load('foo') + ' ' + get_memory('foo') + ' ' + get_battery('foo'))
