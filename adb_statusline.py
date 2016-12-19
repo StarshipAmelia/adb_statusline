@@ -9,23 +9,6 @@ be formatted either for "standard" usage in a shell, or "tmux" usage in tmux.
 Color is mandatory at this point.
 """
 
-__license__ = "GPLv3"
-__status__ = "Development"
-
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
 # For parsing arguments
 import argparse
 # For stderr and exit
@@ -39,6 +22,22 @@ import re
 
 # For easier color
 from colored import fore, style
+
+
+__license__ = "GPLv3"
+__status__ = "Development"
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 # Function Definitions START
@@ -365,7 +364,7 @@ def get_cpu_percent(device):
 
     cpu_percent = re.sub(r'%.*', '', ''.join(dirty_percent))
 
-    return colorize(cpu_percent, (-100), args.tmux_needed) + '%'
+    return colorize(float(cpu_percent), (-100), args.tmux_needed) + '%'
 
 # Function Definitions END
 
@@ -425,24 +424,47 @@ if args.tmux_needed and not args.flags:
 if not args.flags:
     parser.error('Please specify an action, see -h')
 
-# Initalize to_print string
-to_print = ''
+# Initalize to_print list
+to_print = []
+
+# Initalize strings to store get_*() functions into, for multiple prints
+load_string = ''
+memory_string = ''
+battery_string = ''
+cpu_string = ''
+
 
 # Main program loop
 for flag in args.flags:
     # Check for each flag
     if flag == 'load':
-        to_print += get_load('foo') + ' '
+        if not load_string:
+            load_string = get_load('foo')
+            to_print.append(load_string)
+        else:
+            to_print.append(load_string)
 
     if flag == 'memory':
-        to_print += get_memory('foo') + ' '
+        if not memory_string:
+            memory_string = get_memory('foo')
+            to_print.append(memory_string)
+        else:
+            to_print.append(memory_string)
 
     if flag == 'battery':
-        to_print += get_battery('foo') + ' '
+        if not battery_string:
+            battery_string = get_battery('foo')
+            to_print.append(battery_string)
+        else:
+            to_print.append(battery_string)
 
     if flag == 'cpu':
-        to_print += get_cpu_percent('foo') + ' '
+        if not cpu_string:
+            cpu_string = get_cpu_percent('foo')
+            to_print.append(cpu_string)
+        else:
+            to_print.append(cpu_string)
 
-
-# While printing, slice off the trailing space
-print(to_print[:-1])
+# Print
+for out in to_print:
+    print(out, end=' ')
