@@ -347,6 +347,26 @@ def get_battery(device):
                     100,
                     args.tmux_needed) + '%'
 
+
+def get_cpu_percent(device):
+    """
+    Gets the CPU usage percent from the last ~30 seconds of the android device
+    represented by the string device (not implmented currently, assumes only 1
+    device is plugged in)
+
+    Returns the cpu percentage in the format PERCENT%
+    """
+
+    # Get the cpu percentage from dumpsys cpuinfo
+    dirty_percent = subprocess.run(
+        ['adb', 'shell', 'dumpsys cpuinfo'],
+        universal_newlines=True,
+        stdout=subprocess.PIPE).stdout.split('\n')[-2:-1]
+
+    cpu_percent = re.sub(r'%.*', '', ''.join(dirty_percent))
+
+    return colorize(cpu_percent, (-100), args.tmux_needed) + '%'
+
 # Function Definitions END
 
 
@@ -376,15 +396,22 @@ parser.add_argument('-l', '--load',
 parser.add_argument('-m', '--memory',
                     action='append_const',
                     dest='flags',
-                    const='mem',
-                    help='Display memory useage, human readable (action)'
+                    const='memory',
+                    help='Display memory useage, in megabytes (action)'
                     )
 
 parser.add_argument('-b', '--battery',
                     action='append_const',
                     dest='flags',
-                    const='bat',
+                    const='battery',
                     help='Display battery percentage (action)'
+                    )
+
+parser.add_argument('-c', '--cpu',
+                    action='append_const',
+                    dest='flags',
+                    const='cpu',
+                    help='Display cpu usage percentage (action)'
                     )
 
 args = parser.parse_args()
@@ -406,10 +433,16 @@ for flag in args.flags:
     # Check for each flag
     if flag == 'load':
         to_print += get_load('foo') + ' '
-    if flag == 'mem':
+
+    if flag == 'memory':
         to_print += get_memory('foo') + ' '
-    if flag == 'bat':
+
+    if flag == 'battery':
         to_print += get_battery('foo') + ' '
+
+    if flag == 'cpu':
+        to_print += get_cpu_percent('foo') + ' '
+
 
 # While printing, slice off the trailing space
 print(to_print[:-1])
