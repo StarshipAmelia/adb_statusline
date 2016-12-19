@@ -9,30 +9,8 @@ be formatted either for "standard" usage in a shell, or "tmux" usage in tmux.
 Color is mandatory at this point.
 """
 
-# For parsing arguments
-import argparse
-# For stderr and exit
-import sys
-# For exit codes
-import errno
-# For running adb and other commands
-import subprocess
-# For regexes
-import re
-
-# For easier color
-from colored import fore, back, style
-
-# Authorship information
-__author__ = "Ameliai"
-__copyright__ = "2016, Amelia"
-__credits__ = ["Amelia"]
-
 __license__ = "GPLv3"
-__version__ = "0.0.1"
-__maintainer__ = "Amelia"
-__email__ = "StarshipAmelia@gmail.com"
-__status__ = "Prototype"
+__status__ = "Development"
 
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -46,6 +24,21 @@ __status__ = "Prototype"
 #
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+# For parsing arguments
+import argparse
+# For stderr and exit
+import sys
+# For exit codes
+import errno
+# For running adb and other commands
+import subprocess
+# For regexes
+import re
+
+# For easier color
+from colored import fore, style
 
 
 # Function Definitions START
@@ -219,27 +212,27 @@ def colorize(num, maximum, tmux_needed):
         return_string = colors.format_satisfied(str(num))
 
     elif percent >= 80:
-        # Mostly satisfied
+        # high_high
         return_string = colors.format_high_high(str(num))
 
     elif percent >= 60:
-        # Fairly satisfied
+        # high_low
         return_string = colors.format_high_low(str(num))
 
     elif percent >= 45:
-        # Begin to worry
+        # medium_high
         return_string = colors.format_medium_high(str(num))
 
     elif percent >= 30:
-        # Worry
+        # medium_low
         return_string = colors.format_medium_low(str(num))
 
     elif percent >= 15:
-        # Worry more
+        # low_high
         return_string = colors.format_low_high(str(num))
 
     else:
-        # Worry a lot
+        # low_low
         return_string = colors.format_low_low(str(num))
 
     return return_string
@@ -405,8 +398,18 @@ if args.tmux_needed and not args.flags:
 if not args.flags:
     parser.error('Please specify an action, see -h')
 
-## Main program loop
-#for flag in args.flags:
-#    print(flag)
+# Initalize to_print string
+to_print = ''
 
-print(get_load('foo') + ' ' + get_memory('foo') + ' ' + get_battery('foo'))
+# Main program loop
+for flag in args.flags:
+    # Check for each flag
+    if flag == 'load':
+        to_print += get_load('foo') + ' '
+    if flag == 'mem':
+        to_print += get_memory('foo') + ' '
+    if flag == 'bat':
+        to_print += get_battery('foo') + ' '
+
+# While printing, slice off the trailing space
+print(to_print[:-1])
