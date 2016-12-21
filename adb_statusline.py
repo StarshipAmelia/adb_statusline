@@ -24,8 +24,8 @@ import re
 from colored import fore, style
 
 
-__license__ = "GPLv3"
 __status__ = "Development"
+__license__ = "GPLv3"
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
@@ -196,7 +196,7 @@ def colorize(num, maximum, tmux_needed):
                         style.RESET)            # Reset text
 
     # Initalize
-    return_string = ""
+    return_string = ''
 
     # Find the percentage
     if maximum < 0:
@@ -424,8 +424,8 @@ if args.tmux_needed and not args.flags:
 if not args.flags:
     parser.error('Please specify an action, see -h')
 
-# Initalize to_print list
-to_print = []
+# Initalize to_print string
+to_print = ''
 
 # Initalize strings to store get_*() functions into, for multiple prints
 load_string = ''
@@ -436,35 +436,35 @@ cpu_string = ''
 
 # Main program loop
 for flag in args.flags:
-    # Check for each flag
+    # Check for each flag, if it's already been calculated, use that instead of
+    # calculating it again.
     if flag == 'load':
         if not load_string:
             load_string = get_load('foo')
-            to_print.append(load_string)
+            to_print += (load_string) + ' '
         else:
-            to_print.append(load_string)
+            to_print += (load_string) + ' '
 
     if flag == 'memory':
         if not memory_string:
             memory_string = get_memory('foo')
-            to_print.append(memory_string)
+            to_print += (memory_string) + ' '
         else:
-            to_print.append(memory_string)
+            to_print += (memory_string) + ' '
 
     if flag == 'battery':
         if not battery_string:
             battery_string = get_battery('foo')
-            to_print.append(battery_string)
+            to_print += (battery_string) + ' '
         else:
-            to_print.append(battery_string)
+            to_print += (battery_string) + ' '
 
     if flag == 'cpu':
         if not cpu_string:
             cpu_string = get_cpu_percent('foo')
-            to_print.append(cpu_string)
+            to_print += (cpu_string) + ' '
         else:
-            to_print.append(cpu_string)
+            to_print += (cpu_string) + ' '
 
-# Print
-for out in to_print:
-    print(out, end=' ')
+# Print, slicing off the trailing space
+print(to_print[:-1])
