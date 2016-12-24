@@ -3,8 +3,9 @@
 adb_statusline.py is a reasonably simple script that will print various pieces
 of information about a connected android phone via adb.
 
-Load average, memory usage, and/or battery percentage can be printed. They will
-be formatted either for "standard" usage in a shell, or "tmux" usage in tmux.
+Load average, cpu percent, memory usage, and/or battery percentage can be
+printed. They will be formatted either for "standard" usage in a shell, or
+"tmux" usage in tmux.
 
 Color is mandatory at this point.
 """
@@ -66,6 +67,21 @@ def check_adb():
     if not re.search(r'\bdevice\b', device_exist.decode('utf-8')):
         print('No device detected!!', file=sys.stderr)
         sys.exit(errno.ENXIO)
+
+
+def find_first_device():
+    """
+    Finds the first device listed in adb devices.
+    Should only be used if -s is not specified.
+    """
+
+    # Get the output of adb devices
+    dirty_devices = subprocess.run(['adb', 'devices'],
+                                   stdout=subprocess.PIPE,
+                                   universal_newlines=True).stdout
+
+    # Return just the device ID
+    return re.sub(r'(^.*?\n|\t.*\n*)', '', dirty_devices)
 
 
 def colorize(string, num, maximum, tmux_needed):
@@ -246,7 +262,10 @@ def get_load(device):
     Returns the load average in the format 'n.nn n.nn n.nn'
     """
     # Grab the output of `adb shell cat /proc/loadavg` only
-    dirty_load = subprocess.run(['adb', 'shell', 'cat /proc/loadavg'],
+    dirty_load = subprocess.run(['adb',
+                                 '-s', device,
+                                 'shell',
+                                 'cat /proc/loadavg'],
                                 stdout=subprocess.PIPE).stdout
 
     # Convert dirty_load to a python string and remove the trailing \n
@@ -259,8 +278,11 @@ def get_load(device):
     loads_list = just_load.split(' ')
 
     # Get number of cpu cores
-    num_cores = subprocess.run(['adb', 'shell',
-                               'cat /sys/devices/system/cpu/present'],
+    num_cores = subprocess.run(['adb',
+                                '-s',
+                                device,
+                                'shell',
+                                'cat /sys/devices/system/cpu/present'],
                                stdout=subprocess.PIPE).stdout
 
     # Get just the last number
@@ -297,7 +319,11 @@ def get_memory(device):
     """
 
     # Grab all of the phone's /proc/meminfo
-    dirty_meminfo = subprocess.run(['adb', 'shell', 'cat /proc/meminfo'],
+    dirty_meminfo = subprocess.run(['adb',
+                                    '-s',
+                                    device,
+                                    'shell',
+                                    'cat /proc/meminfo'],
                                    stdout=subprocess.PIPE,
                                    universal_newlines=True).stdout
 
@@ -335,8 +361,12 @@ def get_battery(device):
     capacity_location = '/sys/class/power_supply/battery/capacity'
 
     # Get the battery level from /sys/class/power_supply/battery/capacity
-    battery_level = subprocess.run(['adb', 'shell',
-                                   'cat', capacity_location],
+    battery_level = subprocess.run(['adb',
+                                    '-s',
+                                    device,
+                                    'shell',
+                                    'cat',
+                                    capacity_location],
                                    stdout=subprocess.PIPE,
                                    universal_newlines=True).stdout
     # Remove newline
@@ -360,7 +390,7 @@ def get_cpu_percent(device):
 
     # Get the cpu percentage from dumpsys cpuinfo
     dirty_percent = subprocess.run(
-        ['adb', 'shell', 'dumpsys cpuinfo'],
+        ['adb', '-s', device, 'shell', 'dumpsys cpuinfo'],
         universal_newlines=True,
         stdout=subprocess.PIPE).stdout.split('\n')[-2:-1]
 
@@ -390,6 +420,12 @@ tmux via adb"""
 
 # Set up parser and arguments
 parser = argparse.ArgumentParser(description=short_description)
+
+parser.add_argument('-s', '--specific',
+                    action='store',
+                    dest='specific',
+                    help='Use a specific device, otherwise, use the first'
+                    )
 
 parser.add_argument('-t', '--tmux',
                     action='store_true',
@@ -436,6 +472,22 @@ if args.tmux_needed and not args.flags:
 if not args.flags:
     parser.error('Please specify an action, see -h')
 
+# Check if a -s has been passed
+if not args.specific:
+    device = find_first_device()
+else:
+    device = args.specific
+
+# Make sure that device is a valid device for adb
+try:
+    subprocess.run(['adb', '-s', device, 'get-state'],
+                   stdout=subprocess.DEVNULL,
+                   stderr=subprocess.DEVNULL).check_returncode()
+except subprocess.CalledProcessError:
+    print(device, 'is an invalid device!', file=sys.stderr)
+    sys.exit(errno.ENXIO)
+
+
 # Initalize to_print string
 to_print = ''
 
@@ -452,28 +504,28 @@ for flag in args.flags:
     # calculating it again.
     if flag == 'load':
         if not load_string:
-            load_string = get_load('foo')
+            load_string = get_load(device)
             to_print += (load_string) + ' '
         else:
             to_print += (load_string) + ' '
 
     if flag == 'memory':
         if not memory_string:
-            memory_string = get_memory('foo')
+            memory_string = get_memory(device)
             to_print += (memory_string) + ' '
         else:
             to_print += (memory_string) + ' '
 
     if flag == 'battery':
         if not battery_string:
-            battery_string = get_battery('foo')
+            battery_string = get_battery(device)
             to_print += (battery_string) + ' '
         else:
             to_print += (battery_string) + ' '
 
     if flag == 'cpu':
         if not cpu_string:
-            cpu_string = get_cpu_percent('foo')
+            cpu_string = get_cpu_percent(device)
             to_print += (cpu_string) + ' '
         else:
             to_print += (cpu_string) + ' '
