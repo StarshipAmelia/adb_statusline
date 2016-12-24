@@ -268,8 +268,8 @@ def get_load(device):
     # Increment the number, it's zero-indexed
     num_cores = int(num_cores) + 1
 
-    # Double num_cores for "medium" usage when 100% taxed
-    num_cores = num_cores * 2
+    # triple num_cores for a more useful gradient of color vs usage than *2
+    num_cores = num_cores * 3
 
     # Initalize
     loads_string = ''
