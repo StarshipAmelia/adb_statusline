@@ -10,6 +10,7 @@ Features
 * Show the battery percentage of the connected android device
 * Each of these can display multiple times, in any order
 * Able to output in either ANSI escapes or ``tmux`` style color
+* Drains your battery
 
 Usage
 =====
@@ -32,11 +33,12 @@ Installation
 ============
 Requirements
 ------------
-* Python >3.5
+* Python >= 3.5
 * ``tmux`` which supports 256color
 * ``adb``
-* Tested with android 7
+* Tested with android 7.1.1
 * The amazing `colored <https://pypi.python.org/pypi/colored/>`_ module for python!
+* A willingness to charge your phone more frequently
 * TODO: FINISH ME AFTER FINISHING THE SCRIPT
 
 
@@ -45,7 +47,7 @@ TODO: FINISH ME AFTER FINISHING THE SCRIPT
 
 Why?
 ====
-I felt like it (TODO: elaborate here...)
+I've previously made a version of this script in bash (unreleased), and felt like improving upon its functionality while also learning a more comprehensive language. Also I enjoy seeing colorful numbers in my tmux statusbar, and picking up one's phone to check the battery is far too difficult!
 
 Inspiration
 ===========
