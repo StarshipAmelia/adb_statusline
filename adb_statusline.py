@@ -364,6 +364,13 @@ def get_cpu_percent(device):
 
     cpu_percent = re.sub(r'%.*', '', ''.join(dirty_percent))
 
+    # Is the output anomalous?
+    try:
+        cpu_percent = float(cpu_percent)
+    except ValueError:
+        # The output is anomalous, return a placeholder
+        return 'X'
+
     return colorize(float(cpu_percent), (-100), args.tmux_needed) + '%'
 
 # Function Definitions END
