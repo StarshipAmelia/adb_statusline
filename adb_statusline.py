@@ -68,12 +68,13 @@ def check_adb():
         sys.exit(errno.ENXIO)
 
 
-def colorize(num, maximum, tmux_needed):
+def colorize(string, num, maximum, tmux_needed):
     """
     Takes the value of num and uses it to determine what color the num
     should be.
 
-    num             - The number that will be colorized
+    string          - The string (often a number) to colorize
+    num             - The number to compare against maximum
     maximum         - The 'maximum' value, used to create percentages
                       Make this negative if bigger num == worse
     tmux_needed     - Are tmux-style colors needed?
@@ -208,31 +209,31 @@ def colorize(num, maximum, tmux_needed):
     # Check for the different levels
     if percent >= 100:  # >= just in case we get an absurdly high load average
         # Satisfied
-        return_string = colors.format_satisfied(str(num))
+        return_string = colors.format_satisfied(str(string))
 
     elif percent >= 80:
         # high_high
-        return_string = colors.format_high_high(str(num))
+        return_string = colors.format_high_high(str(string))
 
     elif percent >= 60:
         # high_low
-        return_string = colors.format_high_low(str(num))
+        return_string = colors.format_high_low(str(string))
 
     elif percent >= 45:
         # medium_high
-        return_string = colors.format_medium_high(str(num))
+        return_string = colors.format_medium_high(str(string))
 
     elif percent >= 30:
         # medium_low
-        return_string = colors.format_medium_low(str(num))
+        return_string = colors.format_medium_low(str(string))
 
     elif percent >= 15:
         # low_high
-        return_string = colors.format_low_high(str(num))
+        return_string = colors.format_low_high(str(string))
 
     else:
         # low_low
-        return_string = colors.format_low_low(str(num))
+        return_string = colors.format_low_low(str(string))
 
     return return_string
 
@@ -277,7 +278,10 @@ def get_load(device):
     for load in loads_list:
         # This number gets more hazardous as it goes up, so num_cores should be
         # negative
-        loads_string += colorize(load, (num_cores * -1), args.tmux_needed)
+        loads_string += colorize(load,
+                                 load,
+                                 (num_cores * -1),
+                                 args.tmux_needed)
         loads_string += ' '
 
     # Remove the last space while returning
@@ -313,13 +317,10 @@ def get_memory(device):
     # No need to convert meminfo_list[1], it's not used again...
 
     # Colorize used memory
-    return_string = colorize(mem_used,
+    return_string = colorize(str(mem_used) + '/' + str(meminfo_list[0]),
+                             mem_used,
                              (meminfo_list[0] * -1),
                              args.tmux_needed)
-
-    # TODO Colorize total mem?
-    return_string = return_string + '/' + str(meminfo_list[0])
-
     return return_string
 
 
@@ -343,6 +344,7 @@ def get_battery(device):
 
     # Return the value
     return colorize(battery_level,
+                    battery_level,
                     100,
                     args.tmux_needed) + '%'
 
@@ -371,7 +373,10 @@ def get_cpu_percent(device):
         # The output is anomalous, return a placeholder
         return 'X'
 
-    return colorize(float(cpu_percent), (-100), args.tmux_needed) + '%'
+    return colorize(cpu_percent,
+                    float(cpu_percent),
+                    (-100),
+                    args.tmux_needed) + '%'
 
 # Function Definitions END
 
