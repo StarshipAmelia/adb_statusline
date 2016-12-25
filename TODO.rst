@@ -13,3 +13,5 @@ TODO
 * Investigate and use exceptions in more locations?
 * Better pass ``args.tmux_needed``
 * Add indicator letter or symbols optionally in front of or around each action's output to better distinguish them?
+* Add graphics (framerate?) and network indicators?
+* Finish `<README.rst>`_
