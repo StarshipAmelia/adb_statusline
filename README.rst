@@ -36,7 +36,6 @@ At least one "action" must be selected for the script to actually do anything!
 
 Example
 -------
-.. role:: red
 
 ::
 
@@ -66,6 +65,15 @@ Example
       - Memory usage
       - Battery percent
 
+.. image:: example.png
+    :name: example
+    :align: left
+    :alt: An example, with color
+
+Limitations
+===========
+* Occasionally, the command ``adb shell dumpsys cpuinfo``'s last line reports anomalous CPU usage (in the format ``-x.-y`` where both x and y are numbers). When this happens the CPU usage field will display an 'X'. This seems to be a bug in android, at least in version 7.1.1 on the Nexus 5x.
+* By default, ``tmux`` refreshes the status bar every 2 seconds. This script takes around 0.35 seconds to run on a i5 4440 in a VM (2 cores). On a (simulated) busy system, this time can spike to 1.1 seconds! If you are worried about your system not being quick enough, try timing the execution of the script with ``time`` several times to see how long it takes on average.
 
 Installation
 ============
@@ -79,13 +87,14 @@ Requirements
 * A willingness to charge your phone more frequently
 * TODO: FINISH ME AFTER FINISHING THE SCRIPT
 
-
+Instructions
+------------
 TODO: FINISH ME AFTER FINISHING THE SCRIPT
 
 
 Why?
 ====
-I've previously made a version of this script in bash (unreleased), and felt like improving upon its functionality while also learning a more comprehensive language. Also I enjoy seeing colorful numbers in my tmux status bar, and picking up one's phone to check the battery is far too difficult!
+I've previously made a version of this script in bash (unreleased), and felt like improving upon its functionality while also learning a more comprehensive language. Also I enjoy seeing colorful numbers in my tmux status bar, and picking up one's phone to check the battery is far too difficult! Hopefully someone else will also find this useful!
 
 Inspiration
 ===========
