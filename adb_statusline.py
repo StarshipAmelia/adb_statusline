@@ -81,7 +81,7 @@ def find_first_device():
                                    universal_newlines=True).stdout
 
     # Return just the device ID
-    return re.sub(r'(^.*?\n|\t.*\n*)', '', dirty_devices)
+    return re.sub(r'(^.*?\n|\t.*)', '', dirty_devices, flags=re.S)
 
 
 def colorize(string, num, maximum, tmux_needed):
