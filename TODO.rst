@@ -15,4 +15,6 @@ TODO
 * Better pass ``args.tmux_needed``
 * Add indicator letter or symbols optionally in front of or around each action's output to better distinguish them?
 * Add graphics (framerate?) and network indicators?
+* Add support for custom color choices via a config file or individual switches?
+* Add to the -h output to specified there that an "action" must be chosen.
 * Finish `<README.rst>`_
