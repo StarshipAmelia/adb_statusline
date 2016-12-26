@@ -419,7 +419,8 @@ short_description = """A statusline to display android phone info for shell and
 tmux via adb"""
 
 # Set up parser and arguments
-parser = argparse.ArgumentParser(description=short_description)
+parser = argparse.ArgumentParser(description=short_description,
+                                 epilog='At least 1 "ACTION" is required!')
 
 parser.add_argument('-s', '--specific',
                     action='store',
@@ -437,28 +438,28 @@ parser.add_argument('-l', '--load',
                     action='append_const',
                     dest='flags',
                     const='load',
-                    help='Display load average (action)'
+                    help='ACTION - Display load average'
                     )
 
 parser.add_argument('-m', '--memory',
                     action='append_const',
                     dest='flags',
                     const='memory',
-                    help='Display memory useage, in megabytes (action)'
+                    help='ACTION - Display memory useage, in megabytes'
                     )
 
 parser.add_argument('-b', '--battery',
                     action='append_const',
                     dest='flags',
                     const='battery',
-                    help='Display battery percentage (action)'
+                    help='ACTION - Display battery percentage'
                     )
 
 parser.add_argument('-c', '--cpu',
                     action='append_const',
                     dest='flags',
                     const='cpu',
-                    help='Display cpu usage percentage (action)'
+                    help='ACTION - Display cpu usage percentage'
                     )
 
 args = parser.parse_args()
