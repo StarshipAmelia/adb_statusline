@@ -4,10 +4,8 @@ adb_statusline.py is a reasonably simple script that will print various pieces
 of information about a connected android phone via adb.
 
 Load average, cpu percent, memory usage, and/or battery percentage can be
-printed. They will be formatted either for "standard" usage in a shell, or
-"tmux" usage in tmux.
-
-Color is mandatory at this point.
+printed. They will be formatted either for "ANSI" usage in a shell,
+"TMUX" usage in tmux, or colorless usage via "NONE"
 """
 
 # For parsing arguments
@@ -39,6 +37,131 @@ __license__ = "GPLv3"
 #
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+# Class Definitions START
+
+class Colors:
+    """
+    Contains data members to store the choice of colors in, as well as
+    functions to format according to the various levels
+    """
+    def __init__(self=None,
+                 satisfied=None,
+                 high_high=None,
+                 high_low=None,
+                 medium_high=None,
+                 medium_low=None,
+                 low_high=None,
+                 low_low=None,
+                 bold=None,
+                 reset=None):
+
+        # If any value is not set, set it to an empty string
+        if self is None:
+            self = ''
+
+        if satisfied is None:
+            satisfied = ''
+
+        if high_high is None:
+            high_high = ''
+
+        if high_low is None:
+            high_low = ''
+
+        if medium_high is None:
+            medium_high = ''
+
+        if medium_low is None:
+            medium_low = ''
+
+        if low_high is None:
+            low_high = ''
+
+        if low_low is None:
+            low_low = ''
+
+        if bold is None:
+            bold = ''
+
+        if reset is None:
+            reset = ''
+
+        self.satisfied = satisfied
+        self.high_high = high_high
+        self.high_low = high_low
+        self.medium_high = medium_high
+        self.medium_low = medium_low
+        self.low_high = low_high
+        self.low_low = low_low
+        self.bold = bold
+        self.reset = reset
+
+    def format_satisfied(self, string):
+        """
+        returns the formatted string, according to the colors passed in the
+        object initialization.
+
+        satisfied colors
+        """
+        return (self.satisfied + self.bold + string + self.reset)
+
+    def format_high_high(self, string):
+        """
+        returns the formatted string, according to the colors passed in the
+        object initialization.
+
+        high_high colors
+        """
+        return (self.high_high + self.bold + string + self.reset)
+
+    def format_high_low(self, string):
+        """
+        returns the formatted string, according to the colors passed in the
+        object initialization.
+
+        high_low colors
+        """
+        return (self.high_low + self.bold + string + self.reset)
+
+    def format_medium_high(self, string):
+        """
+        returns the formatted string, according to the colors passed in the
+        object initialization.
+
+        medium_high colors
+        """
+        return (self.medium_high + self.bold + string + self.reset)
+
+    def format_medium_low(self, string):
+        """
+        returns the formatted string, according to the colors passed in the
+        object initialization.
+
+        medium_low colors
+        """
+        return (self.medium_low + self.bold + string + self.reset)
+
+    def format_low_high(self, string):
+        """
+        returns the formatted string, according to the colors passed in the
+        object initialization.
+
+        low_high colors
+        """
+        return (self.low_high + self.bold + string + self.reset)
+
+    def format_low_low(self, string):
+        """
+        returns the formatted string, according to the colors passed in the
+        object initialization.
+
+        low_low colors
+        """
+        return (self.low_low + self.bold + string + self.reset)
+
+# Class Definitions END
 
 
 # Function Definitions START
@@ -84,7 +207,7 @@ def find_first_device():
     return re.sub(r'(^.*?\n|\t.*)', '', dirty_devices, flags=re.S)
 
 
-def colorize(string, num, maximum, tmux_needed):
+def colorize(string, num, maximum, colors):
     """
     Takes the value of num and uses it to determine what color the num
     should be.
@@ -93,124 +216,12 @@ def colorize(string, num, maximum, tmux_needed):
     num             - The number to compare against maximum
     maximum         - The 'maximum' value, used to create percentages
                       Make this negative if bigger num == worse
-    tmux_needed     - Are tmux-style colors needed?
+    colors          - Colors() object containing the colors to use
 
     The colorized text is returned
 
     Uses the colored module if tmux_needed is not True
     """
-
-    class Colors:
-        """
-        Contains data members to store the choice of colors in, as well as
-        functions to format according to the various levels
-        """
-        def __init__(self,
-                     satisfied,
-                     high_high,
-                     high_low,
-                     medium_high,
-                     medium_low,
-                     low_high,
-                     low_low,
-                     bold,
-                     reset):
-
-            self.satisfied = satisfied
-            self.high_high = high_high
-            self.high_low = high_low
-            self.medium_high = medium_high
-            self.medium_low = medium_low
-            self.low_high = low_high
-            self.low_low = low_low
-            self.bold = bold
-            self.reset = reset
-
-        def format_satisfied(self, string):
-            """
-            returns the formatted string, according to the colors passed in the
-            object initialization.
-
-            satisfied colors
-            """
-            return (self.satisfied + self.bold + string + self.reset)
-
-        def format_high_high(self, string):
-            """
-            returns the formatted string, according to the colors passed in the
-            object initialization.
-
-            high_high colors
-            """
-            return (self.high_high + self.bold + string + self.reset)
-
-        def format_high_low(self, string):
-            """
-            returns the formatted string, according to the colors passed in the
-            object initialization.
-
-            high_low colors
-            """
-            return (self.high_low + self.bold + string + self.reset)
-
-        def format_medium_high(self, string):
-            """
-            returns the formatted string, according to the colors passed in the
-            object initialization.
-
-            medium_high colors
-            """
-            return (self.medium_high + self.bold + string + self.reset)
-
-        def format_medium_low(self, string):
-            """
-            returns the formatted string, according to the colors passed in the
-            object initialization.
-
-            medium_low colors
-            """
-            return (self.medium_low + self.bold + string + self.reset)
-
-        def format_low_high(self, string):
-            """
-            returns the formatted string, according to the colors passed in the
-            object initialization.
-
-            low_high colors
-            """
-            return (self.low_high + self.bold + string + self.reset)
-
-        def format_low_low(self, string):
-            """
-            returns the formatted string, according to the colors passed in the
-            object initialization.
-
-            low_low colors
-            """
-            return (self.low_low + self.bold + string + self.reset)
-
-    if tmux_needed:
-        # Use tmux-style colors
-        colors = Colors("#[fg=colour51]",       # Cyan
-                        "#[fg=colour46]",       # Bright Green
-                        "#[fg=colour28]",       # Dark Green
-                        "#[fg=colour226]",      # Yellow
-                        "#[fg=colour3]",        # Orange
-                        "#[fg=colour1]",        # Dark Red
-                        "#[fg=colour196]",      # Bright Red
-                        "#[bold]",              # Bold Text
-                        "#[none fg=default]")   # Reset text
-    else:
-        # Use ANSI 256 color
-        colors = Colors(fore.CYAN_1,            # Cyan
-                        fore.GREEN_1,           # Bright Green
-                        fore.GREEN_4,           # Dark Green
-                        fore.YELLOW_1,          # Yellow
-                        fore.YELLOW,            # Orange
-                        fore.RED,               # Dark Red
-                        fore.RED_1,             # Bright Red
-                        style.BOLD,             # Bold Text
-                        style.RESET)            # Reset text
 
     # Initalize
     return_string = ''
@@ -254,10 +265,12 @@ def colorize(string, num, maximum, tmux_needed):
     return return_string
 
 
-def get_load(device):
+def get_load(device, colors):
     """
-    Gets the load average of the android device represented by the string
-    device (not implemented currently, assumes only 1 device is plugged in)
+    Gets the load average of the android device
+
+    device      - The device to get the load average of
+    colors      - The Colors() object to use the colors in
 
     Returns the load average in the format 'n.nn n.nn n.nn'
     """
@@ -303,17 +316,19 @@ def get_load(device):
         loads_string += colorize(load,
                                  load,
                                  (num_cores * -1),
-                                 args.tmux_needed)
+                                 colors)
         loads_string += ' '
 
     # Remove the last space while returning
     return loads_string[:-1]
 
 
-def get_memory(device):
+def get_memory(device, colors):
     """
-    Gets the memory usage of the android device represented by the string
-    device (not implemented currently, assumes only 1 device is plugged in)
+    Gets the memory usage of the android device
+
+    device      - The device to get the memory usage of
+    colors      - The Colors() object to use the colors in
 
     Returns the memory in the format USED/TOTAL, in MB
     """
@@ -346,14 +361,16 @@ def get_memory(device):
     return_string = colorize(str(mem_used) + '/' + str(meminfo_list[0]),
                              mem_used,
                              (meminfo_list[0] * -1),
-                             args.tmux_needed)
+                             colors)
     return return_string
 
 
-def get_battery(device):
+def get_battery(device, colors):
     """
-    Gets the battery level of the android device represented by the string
-    device (not implemented currently, assumes only 1 device is plugged in)
+    Gets the battery level of the android device
+
+    device      - The device to get the battery level of
+    colors      - The Colors() object to use the colors in
 
     Returns the battery in the format PERCENT%
     """
@@ -376,14 +393,15 @@ def get_battery(device):
     return colorize(battery_level,
                     battery_level,
                     100,
-                    args.tmux_needed) + '%'
+                    colors) + '%'
 
 
-def get_cpu_percent(device):
+def get_cpu_percent(device, colors):
     """
     Gets the CPU usage percent from the last ~30 seconds of the android device
-    represented by the string device (not implmented currently, assumes only 1
-    device is plugged in)
+
+    device      - The device to get the cpu percent of
+    colors      - The Colors() object to use the colors in
 
     Returns the cpu percentage in the format PERCENT%
     """
@@ -406,7 +424,7 @@ def get_cpu_percent(device):
     return colorize(cpu_percent,
                     float(cpu_percent),
                     (-100),
-                    args.tmux_needed) + '%'
+                    colors) + '%'
 
 # Function Definitions END
 
@@ -428,10 +446,14 @@ parser.add_argument('-s', '--specific',
                     help='Use a specific device, otherwise, use the first'
                     )
 
-parser.add_argument('-t', '--tmux',
-                    action='store_true',
-                    dest='tmux_needed',
-                    help='Use tmux-style colors'
+parser.add_argument('-C', '--color',
+                    action='store',
+                    dest='color_choice',
+                    default='ANSI',
+                    const='ANSI',
+                    nargs='?',
+                    choices=['ANSI', 'TMUX', 'NONE'],
+                    help='Chose color from ANSI, TMUX, or NONE'
                     )
 
 parser.add_argument('-l', '--load',
@@ -464,12 +486,7 @@ parser.add_argument('-c', '--cpu',
 
 args = parser.parse_args()
 
-# The tmux flag can only be used with other flags, or there'd be nothing to
-# print!
-if args.tmux_needed and not args.flags:
-    parser.error('-t or --tmux must be used with other flags!!')
-
-# Similarly, at least one flag must be used...
+# At least one flag must be used...
 if not args.flags:
     parser.error('Please specify an action, see -h')
 
@@ -488,6 +505,30 @@ except subprocess.CalledProcessError:
     print(device, 'is an invalid device!', file=sys.stderr)
     sys.exit(errno.ENXIO)
 
+if args.color_choice == 'TMUX':
+    # Use tmux-style colors
+    colors = Colors("#[fg=colour51]",       # Cyan
+                    "#[fg=colour46]",       # Bright Green
+                    "#[fg=colour28]",       # Dark Green
+                    "#[fg=colour226]",      # Yellow
+                    "#[fg=colour3]",        # Orange
+                    "#[fg=colour1]",        # Dark Red
+                    "#[fg=colour196]",      # Bright Red
+                    "#[bold]",              # Bold Text
+                    "#[none fg=default]")   # Reset text
+elif args.color_choice == 'ANSI':
+    # Use ANSI 256 color
+    colors = Colors(fore.CYAN_1,            # Cyan
+                    fore.GREEN_1,           # Bright Green
+                    fore.GREEN_4,           # Dark Green
+                    fore.YELLOW_1,          # Yellow
+                    fore.YELLOW,            # Orange
+                    fore.RED,               # Dark Red
+                    fore.RED_1,             # Bright Red
+                    style.BOLD,             # Bold Text
+                    style.RESET)            # Reset text
+else:
+    colors = Colors()  # No colors!
 
 # Initalize to_print string
 to_print = ''
@@ -505,28 +546,28 @@ for flag in args.flags:
     # calculating it again.
     if flag == 'load':
         if not load_string:
-            load_string = get_load(device)
+            load_string = get_load(device, colors)
             to_print += (load_string) + ' '
         else:
             to_print += (load_string) + ' '
 
     if flag == 'memory':
         if not memory_string:
-            memory_string = get_memory(device)
+            memory_string = get_memory(device, colors)
             to_print += (memory_string) + ' '
         else:
             to_print += (memory_string) + ' '
 
     if flag == 'battery':
         if not battery_string:
-            battery_string = get_battery(device)
+            battery_string = get_battery(device, colors)
             to_print += (battery_string) + ' '
         else:
             to_print += (battery_string) + ' '
 
     if flag == 'cpu':
         if not cpu_string:
-            cpu_string = get_cpu_percent(device)
+            cpu_string = get_cpu_percent(device, colors)
             to_print += (cpu_string) + ' '
         else:
             to_print += (cpu_string) + ' '

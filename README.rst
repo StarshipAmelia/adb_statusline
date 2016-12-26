@@ -1,7 +1,7 @@
 ==============
 adb_statusline
 ==============
-``adb_statusline`` is a python script for displaying various simple information about a connected android phone via ``adb``. This information is colorized and formatted for either shell usage (via ANSI escapes) or ``tmux`` usage.
+``adb_statusline`` is a python script for displaying various simple information about a connected android phone via ``adb``. This information is colorized and formatted for either shell usage (via ANSI escapes) or ``tmux`` usage. It can also output colorless text.
 
 Features
 ========
@@ -10,14 +10,15 @@ Features
 * Show the RAM usage of the connected android device
 * Show the battery percentage of the connected android device
 * Each of these can display multiple times, in any order
-* Able to output in either ANSI escapes or ``tmux`` style color
+* Able to output in either ANSI escapes, ``tmux`` style color, or no color
 * Drains your battery
 
 Usage
 =====
 ::
 
-    usage: adb_statusline.py [-h] [-s SPECIFIC] [-t] [-l] [-m] [-b] [-c]
+    usage: adb_statusline [-h] [-s SPECIFIC] [-C [{ANSI,TMUX,NONE}]] [-l] [-m]
+                          [-b] [-c]
     
     A statusline to display android phone info for shell and tmux via adb
     
@@ -25,14 +26,17 @@ Usage
       -h, --help            show this help message and exit
       -s SPECIFIC, --specific SPECIFIC
                             Use a specific device, otherwise, use the first
-      -t, --tmux            Use tmux-style colors
-      -l, --load            Display load average (action)
-      -m, --memory          Display memory useage, in megabytes (action)
-      -b, --battery         Display battery percentage (action)
-      -c, --cpu             Display cpu usage percentage (action)
+      -C [{ANSI,TMUX,NONE}], --color [{ANSI,TMUX,NONE}]
+                            Chose color from ANSI, TMUX, or NONE
+      -l, --load            ACTION - Display load average
+      -m, --memory          ACTION - Display memory useage, in megabytes
+      -b, --battery         ACTION - Display battery percentage
+      -c, --cpu             ACTION - Display cpu usage percentage
+    
+    At least 1 "ACTION" is required!
 
 
-At least one "action" must be selected for the script to actually do anything!
+
 
 Example
 -------
