@@ -11,6 +11,7 @@ Features
 * Show the battery percentage of the connected android device
 * Each of these can display multiple times, in any order
 * Able to output in either ANSI escapes, ``tmux`` style color, or no color
+* Able to output information about a specified android device, or if none is specified, the first printed by ``adb devices``
 * Drains your battery
 
 Usage
@@ -47,6 +48,11 @@ Example
     
     21.0% 7.82 7.36 7.22 1807/1857 93%
 
+.. figure:: example.png
+    :name: example
+    :align: left
+    :alt: An example, with color
+
 .. list-table:: *Arguments*
     :widths: 20 20 20
     
@@ -69,15 +75,11 @@ Example
       - Memory usage
       - Battery percent
 
-.. image:: example.png
-    :name: example
-    :align: left
-    :alt: An example, with color
-
 Limitations
 ===========
 * Occasionally, the command ``adb shell dumpsys cpuinfo``'s last line reports anomalous CPU usage (in the format ``-x.-y`` where both x and y are numbers). When this happens the CPU usage field will display an 'X'. This seems to be a bug in android, at least in version 7.1.1 on the Nexus 5x.
 * By default, ``tmux`` refreshes the status bar every 2 seconds. This script takes around 0.35 seconds to run on a i5 4440 in a VM (2 cores). On a (simulated) busy system, this time can spike to 1.1 seconds! If you are worried about your system not being quick enough, try timing the execution of the script with ``time`` several times to see how long it takes on average.
+* Similarly, at least in my testing, having this script running every 2 seconds will cause your battery to discharge faster than it otherwise would.
 
 Installation
 ============
@@ -89,11 +91,47 @@ Requirements
 * Tested with android 7.1.1
 * The amazing `colored <https://pypi.python.org/pypi/colored/>`_ module for python
 * A willingness to charge your phone more frequently
-* TODO: FINISH ME AFTER FINISHING THE SCRIPT
+* An Android phone or emulator (emulators not tested)
 
 Instructions
 ------------
-TODO: FINISH ME AFTER FINISHING THE SCRIPT
+Install colored
++++++++++++++++
+First, install colored
+
+.. code:: shell
+
+    $ pip3 install --user colored
+
+Clone Repository
+++++++++++++++++
+Second, clone the repository
+
+.. code:: shell
+
+    $ git clone https://github.com/StarshipAmelia/adb_statusline
+
+Run the script or place it in your ``.tmux.conf``
++++++++++++++++++++++++++++++++++++++++++++++++++
+Third, use the script!
+
+.. code:: shell
+
+    $ python3 adb_statusline/adb_statusline.py --color ANSI -clmb
+
+or
+
+.. code:: shell
+
+    $ cd adb_statusline && ./adb_statusline.py -lbcm
+
+or (in ~/.tmux.conf)
+
+.. code::
+
+    set -g status-right '#(path/to/adb_statusline -C TMUX -clmb)'
+
+The ``#(path/to/adb_statusline -C TMUX -clmb)`` bit should work in either tmux status bar, and with any other contents (provided you've used the paths you've cloned the repo to!). However, if it seems to be "cut off" try increasing ``status-right-length`` . Mine currently looks like ``set -g status-right-length 175`` , which is probably overkill.
 
 
 Why?

@@ -11,10 +11,11 @@ TODO
     * Investigate this bug(?) in android 7.1.1's dumpsys cpuinfo? (Very possibly out of scope for me and this project)
 * CHECK -- Add flag and implementation for device choosing (may be difficult with just 1 device to test on...)
 * CHECK -- REMOVED -- Better pass ``args.tmux_needed``
-* CHECK -- Add to the -h output to specified there that an "action" must be chosen.
+* CHECK -- Add to the -h output to specify there that an "action" must be chosen.
+* CHECK -- Finish `<README.rst>`_ for release
 * Time dumpsys usage vs using ``cat`` and /proc/ & /sys/ targets
 * Investigate and use exceptions in more locations?
 * Add indicator letter or symbols optionally in front of or around each action's output to better distinguish them?
 * Add graphics (framerate?) and network indicators?
 * Add support for custom color choices via a config file or individual switches?
-* Finish `<README.rst>`_
+* Put adb_statusline on pypi.
